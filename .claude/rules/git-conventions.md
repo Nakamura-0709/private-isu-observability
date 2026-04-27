@@ -27,3 +27,4 @@ description: Gitブランチ命名規則・コミット・PR作成規約
 - `🤖 Generated with [Claude Code](https://claude.com/claude-code)` などのAI生成フッターは付けない。
 - **base branch は必ず `main` を指定すること。** GitHubは直前に操作していたブランチをデフォルトにすることがあるため、`gh pr create` では `--base main` を明示する。
 - **assignee は必ず自分を指定すること。** `gh pr create` では `--assignee @me` を付ける。
+- **テスト手順は簡単な修正には不要。** 設定ファイルの軽微な変更など、動作確認が自明な場合は `## テスト手順` セクションを省略する。
