@@ -1,0 +1,6 @@
+# 個人環境設定
+.envrc
+.envrc.override
+
+# ベンチマーク・分析ログ
+logs/
