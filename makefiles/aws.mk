@@ -25,6 +25,27 @@ aws.create-cfn: validate-ssh-private-key ## AWSのCFnスタックを作成
 	@echo "$(STACK_NAME): 作成中です(約1分かかります)"
 	@time aws cloudformation wait stack-create-complete --stack-name $(STACK_NAME)
 
+################################################################################
+# SSHの設定
+################################################################################
+.PHONY: aws.setup-ssh-config
+aws.setup-ssh-config: validate-ssh-private-key ## SSH設定をセットアップ
+	$(eval STACK_ID := $(shell aws cloudformation describe-stacks --stack-name $(STACK_NAME) --query 'Stacks[0].StackId' --output text))
+	$(eval WEB_HOST_IP := $(shell aws ec2 describe-instances \
+	    --filters "Name=tag:aws:cloudformation:stack-id,Values=$(STACK_ID)" "Name=tag:Name,Values=web" \
+	    --query 'Reservations[0].Instances[0].PublicIpAddress' --output text))
+	$(eval BENCH_HOST_IP := $(shell aws ec2 describe-instances \
+	    --filters "Name=tag:aws:cloudformation:stack-id,Values=$(STACK_ID)" "Name=tag:Name,Values=bench" \
+	    --query 'Reservations[0].Instances[0].PublicIpAddress' --output text))
+	@mkdir -p "$(shell dirname "${SSH_CONFIG_FILE}")"
+	@sed \
+	    -e "s|{{SSH_PRIVATE_KEY_PATH}}|${SSH_PRIVATE_KEY_PATH}|g" \
+	    -e "s|{{WEB_HOST_IP}}|$(WEB_HOST_IP)|g" \
+	    -e "s|{{BENCH_HOST_IP}}|$(BENCH_HOST_IP)|g" \
+	    .ssh/ssh_config.tmpl > "${SSH_CONFIG_FILE}"
+	@ssh -F "${SSH_CONFIG_FILE}" web 'echo "ssh web: OK"' || echo 'ssh web: SSH NG'
+	@ssh -F "${SSH_CONFIG_FILE}" bench 'echo "ssh bench: OK"' || echo 'ssh bench: SSH NG'
+
 # SSH鍵の検証（1Passwordエージェント対応版）
 # 書籍では ssh-keygen -y -f ${SSH_PRIVATE_KEY_PATH} を使用しているが、
 # 1Passwordエージェント利用時は秘密鍵ファイルが存在しないため ssh-add -L に変更
