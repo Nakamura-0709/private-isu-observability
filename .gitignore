@@ -2,6 +2,10 @@
 .envrc
 .envrc.override
 
+# SSH設定（生成される config はIP等を含むため除外、テンプレートのみ追跡）
+.ssh/*
+!.ssh/ssh_config.tmpl
+
 # ベンチマーク・分析ログ
 logs/
 
